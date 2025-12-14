@@ -1,0 +1,123 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Check if the authenticated user owns the shop
+    function isShopOwner(shopDomain) {
+      return isAuthenticated() && 
+             request.auth.token.shop == shopDomain;
+    }
+    
+    // Validate that required fields exist
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+    
+    // ============================================
+    // SHOPS COLLECTION
+    // Main store data and settings
+    // ============================================
+    match /shops/{shopDomain} {
+      allow read, write: if isShopOwner(shopDomain);
+      
+      // Validate shop document structure
+      allow create: if isShopOwner(shopDomain) &&
+                       hasRequiredFields(['accessToken', 'createdAt']);
+    }
+    
+    // ============================================
+    // PRODUCT COSTS (COGS) COLLECTION
+    // Cost of goods sold per product variant
+    // ============================================
+    match /productCosts/{shopDomain} {
+      allow read, write: if isShopOwner(shopDomain);
+      
+      match /products/{variantId} {
+        allow read, write: if isShopOwner(shopDomain);
+        
+        // Validate COGS data
+        allow create, update: if isShopOwner(shopDomain) &&
+                                 request.resource.data.cogs is number &&
+                                 request.resource.data.cogs >= 0;
+      }
+    }
+    
+    // ============================================
+    // AD SPEND COLLECTION
+    // Daily advertising spend by platform
+    // ============================================
+    match /adSpend/{shopDomain} {
+      allow read, write: if isShopOwner(shopDomain);
+      
+      match /daily/{dateplatform} {
+        allow read, write: if isShopOwner(shopDomain);
+        
+        // Validate ad spend data
+        allow create, update: if isShopOwner(shopDomain) &&
+                                 request.resource.data.spend is number &&
+                                 request.resource.data.spend >= 0 &&
+                                 request.resource.data.platform is string &&
+                                 request.resource.data.date is string;
+      }
+    }
+    
+    // ============================================
+    // OAUTH TOKENS COLLECTION
+    // Encrypted tokens for ad platforms
+    // ============================================
+    match /oauthTokens/{shopDomain} {
+      allow read, write: if isShopOwner(shopDomain);
+      
+      match /platforms/{platform} {
+        allow read, write: if isShopOwner(shopDomain);
+      }
+    }
+    
+    // ============================================
+    // FIXED COSTS COLLECTION
+    // Monthly fixed costs (rent, salaries, etc)
+    // ============================================
+    match /fixedCosts/{shopDomain} {
+      allow read, write: if isShopOwner(shopDomain);
+      
+      match /costs/{costId} {
+        allow read, write: if isShopOwner(shopDomain);
+        
+        // Validate fixed cost data
+        allow create, update: if isShopOwner(shopDomain) &&
+                                 request.resource.data.amount is number &&
+                                 request.resource.data.amount >= 0 &&
+                                 request.resource.data.description is string;
+      }
+    }
+    
+    // ============================================
+    // SHOP STATS COLLECTION
+    // Pre-aggregated metrics for performance
+    // ============================================
+    match /shopStats/{shopDomain} {
+      allow read, write: if isShopOwner(shopDomain);
+    }
+    
+    // ============================================
+    // DAILY METRICS COLLECTION
+    // Historical profit data by day
+    // ============================================
+    match /dailyMetrics/{shopDomain} {
+      allow read, write: if isShopOwner(shopDomain);
+      
+      match /days/{date} {
+        allow read, write: if isShopOwner(shopDomain);
+      }
+    }
+  }
+}

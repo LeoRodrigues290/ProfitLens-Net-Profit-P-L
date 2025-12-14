@@ -1,0 +1,47 @@
+{
+    "indexes": [
+        {
+            "collectionGroup": "daily",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "date",
+                    "order": "DESCENDING"
+                },
+                {
+                    "fieldPath": "platform",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "products",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "productId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "updatedAt",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "costs",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "frequency",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                }
+            ]
+        }
+    ],
+    "fieldOverrides": []
+}
